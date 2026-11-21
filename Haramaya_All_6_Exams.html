@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Haramaya University - 6 Practice Exams</title>
+<style>
+  :root {
+    --primary: #14532d;
+    --primary-light: #f0fdf4;
+    --accent: #15803d;
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --text: #111827;
+    --muted: #4b5563;
+    --border: #d1d5db;
+    --correct-bg: #dcfce7;
+    --correct-border: #16a34a;
+    --wrong-bg: #fee2e2;
+    --wrong-border: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+    font-size: 17px;
+    line-height: 1.55;
+  }
+  .top-bar {
+    background-color: var(--primary);
+    color: #fff;
+    padding: 18px 20px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  .top-bar .uni { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; margin-bottom: 4px; }
+  .top-bar h1 { margin: 0; font-size: 22px; }
+  .top-bar .sub { font-size: 14px; margin-top: 6px; opacity: 0.92; }
+  .sticky-nav {
+    position: sticky; top: 0; z-index: 100; background: #ffffff; border-bottom: 2px solid var(--primary);
+    padding: 10px 16px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+  }
+  .stats { font-weight: 600; font-size: 15px; color: var(--primary); }
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .nav-group { display: flex; gap: 6px; flex-wrap: wrap; }
+  button { cursor: pointer; border: none; border-radius: 6px; padding: 9px 16px; font-size: 15px; font-weight: 600; transition: background 0.15s; }
+  .btn-submit { background-color: var(--primary); color: #fff; }
+  .btn-submit:hover { background-color: #0f3f21; }
+  .btn-reset { background-color: #e5e7eb; color: #1f2937; }
+  .btn-reset:hover { background-color: #d1d5db; }
+  .btn-exam { background-color: #e5e7eb; color: #1f2937; }
+  .btn-exam.active { background-color: var(--accent); color: #fff; }
+  .btn-exam:hover:not(.active) { background-color: #d1d5db; }
+  .container { max-width: 900px; margin: 22px auto 60px auto; padding: 0 16px; }
+  .score-banner {
+    display: none; background: var(--primary-light); border: 2px solid var(--primary); border-radius: 10px; padding: 18px 20px; margin-bottom: 24px; text-align: center;
+  }
+  .score-banner h2 { margin: 0 0 8px 0; color: var(--primary); font-size: 22px; }
+  .score-breakdown { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; font-size: 15px; font-weight: 600; margin-top: 8px; }
+  .section-header { background: var(--primary); color: #fff; padding: 11px 16px; border-radius: 8px; margin: 28px 0 16px 0; font-size: 18px; font-weight: 700; }
+  .q-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+  .q-card.correct { background: var(--correct-bg); border-color: var(--correct-border); }
+  .q-card.wrong { background: var(--wrong-bg); border-color: var(--wrong-border); }
+  .q-title { font-weight: 700; margin-bottom: 12px; font-size: 17px; }
+  .opt-label { display: block; padding: 9px 12px; margin-bottom: 8px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fafafa; cursor: pointer; }
+  .opt-label:hover { background: #f0fdf4; border-color: #86efac; }
+  .opt-label input { margin-right: 10px; transform: scale(1.2); }
+  .fib-input { width: 100%; max-width: 420px; padding: 10px 12px; font-size: 16px; border: 2px solid #9ca3af; border-radius: 6px; }
+  .fib-input:focus { outline: none; border-color: var(--primary); }
+  .feedback { display: none; margin-top: 12px; padding: 10px 14px; border-radius: 6px; background: rgba(255,255,255,0.85); border-left: 4px solid var(--primary); font-size: 15.5px; }
+  .feedback.show { display: block; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 15px; }
+  th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }
+  th { background-color: #f1f5f9; font-weight: 600; }
+  .exam-container { display: none; }
+  .exam-container.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="uni">Haramaya University • Practice System</div>
+  <h1>Fundamentals of Database Systems</h1>
+  <div class="sub">6 Full Practice Exams (50 Questions Each)</div>
+</div>
+
+<div class="sticky-nav">
+  <div class="nav-group" id="navGroup">
+    <button class="btn-exam active" onclick="switchExam(1)">Exam 1</button>
+    <button class="btn-exam" onclick="switchExam(2)">Exam 2</button>
+    <button class="btn-exam" onclick="switchExam(3)">Exam 3</button>
+    <button class="btn-exam" onclick="switchExam(4)">Exam 4</button>
+    <button class="btn-exam" onclick="switchExam(5)">Exam 5</button>
+    <button class="btn-exam" onclick="switchExam(6)">Exam 6</button>
+  </div>
+  <div class="stats" id="progressText">Answered: 0 / 50 &nbsp;|&nbsp; Timer: <span id="timer">00:00</span></div>
+  <div class="btn-group">
+    <button class="btn-submit" onclick="gradeExam()">Submit &amp; Grade</button>
+    <button class="btn-reset" onclick="resetExam()">Reset</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="score-banner" id="scoreBanner">
+    <h2 id="totalScoreText">Your Score: 0 / 50 (0%)</h2>
+    <div class="score-breakdown" id="breakdownText"></div>
+  </div>
+  <div id="examRoot"></div>
+</div>
+
+<script>
+const ALL_EXAMS = {
+  1: {
+    tf: [
+      { q: "Data redundancy in a file-based system can lead to data inconsistency.", ans: true, exp: "If data is stored in multiple files and updated in one but not the other, inconsistency occurs." },
+      { q: "The conceptual schema describes the physical storage structures of the database.", ans: false, exp: "The Internal schema describes physical storage. The Conceptual schema describes the logical structure." },
+      { q: "Logical data independence is harder to achieve than physical data independence.", ans: true, exp: "Application programs depend heavily on the logical structure of the database, making logical changes harder." },
+      { q: "A DBMS is recommended for an airbag control system in a car.", ans: false, exp: "Airbags require stringent real-time processing. DBMS overhead is too slow and not recommended." },
+      { q: "In a 3-tier architecture, the client directly accesses the database server.", ans: false, exp: "The client goes through the intermediate Application/Web Server. Direct access is blocked for security." },
+      { q: "The schema of a database changes very infrequently.", ans: true, exp: "The schema is the blueprint and rarely changes. The state (data) changes constantly." },
+      { q: "SQL is an example of a procedural Data Manipulation Language (DML).", ans: false, exp: "SQL is a high-level, non-procedural (declarative) language." },
+      { q: "Metadata is stored in the database catalog.", ans: true, exp: "The catalog stores metadata, making the database self-describing." },
+      { q: "A standalone query language interface allows users to enter SQL directly.", ans: true, exp: "An example is SQL*Plus in Oracle, where users type commands directly." },
+      { q: "The relational model uses pointers and graph structures.", ans: false, exp: "The Network model uses graph structures/pointers. The Relational model uses tables." }
+    ],
+    fib: [
+      { q: "Known facts that can be recorded and have an implicit meaning are called ____.", ans: ["data"], display_ans: "Data", exp: "This is the fundamental definition of data." },
+      { q: "The capacity to change the conceptual schema without changing the external schema is called ____ data independence.", ans: ["logical"], display_ans: "Logical", exp: "Logical data independence isolates apps from logical schema changes." },
+      { q: "____ specifies the internal schema of a database.", ans: ["sdl", "storage definition language"], display_ans: "SDL", exp: "Storage Definition Language (SDL) defines the physical storage." },
+      { q: "A(n) ____ is a person who uses predefined 'canned transactions' like a bank teller.", ans: ["naive user", "naive", "parametric user"], display_ans: "Naive User", exp: "Naive or parametric users use canned transactions." },
+      { q: "The DBMS software together with the data itself is called a ____.", ans: ["database system"], display_ans: "Database System", exp: "A database system includes the software and the database." },
+      { q: "The three-schema architecture consists of Internal, Conceptual, and ____ schemas.", ans: ["external"], display_ans: "External", exp: "External schema represents the user views." },
+      { q: "A ____ is a restriction on valid data that must be enforced at all times.", ans: ["constraint"], display_ans: "Constraint", exp: "Constraints ensure data integrity (e.g., age cannot be negative)." }
+    ],
+    mcq: [
+      { q: "Which of the following is NOT a DBMS interface?", opts: ["Menu-based", "Forms-based", "Compilation-based", "Natural Language"], ans: "C", exp: "Interfaces include Menu, Forms, Graphics, Natural Language, Speech, etc. Compilation is a programming process." },
+      { q: "What does the acronym DDL stand for?", opts: ["Data Dictionary Language", "Data Definition Language", "Database Design Language", "Data Manipulation Language"], ans: "B", exp: "DDL is used to define the schema (CREATE, ALTER)." },
+      { q: "Which data model uses a tree-like structure with parent-child relationships?", opts: ["Relational Model", "Network Model", "Hierarchical Model", "Object Model"], ans: "C", exp: "The Hierarchical model uses a tree structure (e.g., IBM IMS)." },
+      { q: "The actual data stored in a database at a particular moment is called:", opts: ["Schema", "Intension", "State", "Metadata"], ans: "C", exp: "The state (or extension/snapshot) is the data at a specific moment. Schema is the intension." },
+      { q: "Which API is used for Java programming access to databases?", opts: ["ODBC", "JDBC", "ADBC", "JDBC++"], ans: "B", exp: "Java Database Connectivity (JDBC) is for Java. ODBC is open standard." },
+      { q: "In a 2-tier client-server architecture, what does the DBMS server provide?", opts: ["Presentation logic", "Query and transaction services", "Web browsing", "Print services only"], ans: "B", exp: "The DBMS server acts as a query/transaction server." },
+      { q: "What is a major limitation of a DBMS?", opts: ["Data redundancy", "High initial cost and complexity", "Program-data dependency", "Inability to handle multiple users"], ans: "B", exp: "A DBMS is expensive and complex to set up compared to simple file systems." },
+      { q: "Which schema level describes the physical storage structures and access paths?", opts: ["External schema", "Conceptual schema", "Internal schema", "View schema"], ans: "C", exp: "Internal level is about physical storage and indexes." },
+      { q: "What is the primary reason for using a 3-tier client-server architecture?", opts: ["To reduce cost", "To improve security by hiding the database", "To make the DBMS run faster", "To store more data"], ans: "B", exp: "The client cannot directly access the DB server; the middle tier filters requests." },
+      { q: "Which of the following is a self-describing data model?", opts: ["Network", "Hierarchical", "XML", "Relational"], ans: "C", exp: "XML combines description with data values." },
+      { q: "A 'canned transaction' is typically used by:", opts: ["Sophisticated users", "DBA", "Naive users", "Database designers"], ans: "C", exp: "Naive users run pre-defined transactions (like ATM withdrawals)." },
+      { q: "What does the acronym SDL stand for?", opts: ["Storage Definition Language", "Schema Definition Language", "Standard Data Language", "System Data Language"], ans: "A", exp: "SDL defines the internal schema." },
+      { q: "The ability to modify the internal schema without changing the conceptual schema is:", opts: ["Logical data independence", "Physical data independence", "External independence", "Schema independence"], ans: "B", exp: "Physical data independence isolates the conceptual schema from physical storage changes." },
+      { q: "Which component of a DBMS stores the database description to make it self-describing?", opts: ["The data files", "The catalog", "The application programs", "The query optimizer"], ans: "B", exp: "The catalog (or metadata repository) stores descriptions." },
+      { q: "The relational model was proposed by:", opts: ["E.F. Codd", "Bill Gates", "Charles Babbage", "Larry Ellison"], ans: "A", exp: "E.F. Codd proposed the relational model in 1970." },
+      { q: "Which of the following is considered a 'worker behind the scene'?", opts: ["Naive user", "DBA", "Tool developer", "Casual user"], ans: "C", exp: "Tool developers build DBMS tools and are behind the scenes, unlike DBA and end-users." },
+      { q: "A restriction on valid data enforced at all times is a:", opts: ["Construct", "Constraint", "Schema", "State"], ans: "B", exp: "Constraints restrict data (e.g., no negative ages)." },
+      { q: "Which language is used to specify external schemas in some DBMSs?", opts: ["DDL", "SDL", "VDL", "DML"], ans: "C", exp: "View Definition Language (VDL) specifies external schemas." },
+      { q: "Which of the following is a high-level, non-procedural DML?", opts: ["SQL", "Embedded C with pointers", "Assembly", "COBOL"], ans: "A", exp: "SQL specifies WHAT data, not HOW to retrieve it." },
+      { q: "Which term describes the specific portion of a database that a user is interested in?", opts: ["Intension", "Extension", "User view", "Catalog"], ans: "C", exp: "External schemas are also called user views." },
+      { q: "When a lower-level schema changes, what must be updated if data independence is fully supported?", opts: ["Application programs", "External schemas", "Mappings between schemas", "All of the above"], ans: "C", exp: "Only the mappings change; higher-level schemas and programs remain unchanged." },
+      { q: "Which DBMS architecture combines everything into a single system?", opts: ["2-Tier Client-Server", "3-Tier Client-Server", "Centralized", "Distributed"], ans: "C", exp: "Centralized architecture puts DBMS, hardware, and apps in a single system." },
+      { q: "Table Based: Based on the table below, what is the Major of the student named 'Smith'?", table: "<table><tr><th>Name</th><th>Student_number</th><th>Class</th><th>Major</th></tr><tr><td>Smith</td><td>17</td><td>1</td><td>CS</td></tr><tr><td>Brown</td><td>8</td><td>2</td><td>CS</td></tr></table>", opts: ["CS", "1", "17", "Math"], ans: "A", exp: "Following the row for Smith, the Major column shows CS." },
+      { q: "Table Based: Based on the table below, how many credit hours is the course 'Database'?", table: "<table><tr><th>Course_name</th><th>Course_number</th><th>Credit_hours</th></tr><tr><td>Data Structures</td><td>CS3320</td><td>4</td></tr><tr><td>Database</td><td>CS3380</td><td>3</td></tr></table>", opts: ["4", "3", "CS3380", "CS3320"], ans: "B", exp: "The row for 'Database' shows 3 in the Credit_hours column." },
+      { q: "Which data model allows complex relationships and uses pointers/navigation?", opts: ["Relational", "Network", "Hierarchical", "XML"], ans: "B", exp: "The Network model uses graph structures and pointers." },
+      { q: "In the 3-tier architecture, what is the middle layer called?", opts: ["Presentation Layer", "Database Services Layer", "Business Logic Layer", "Physical Layer"], ans: "C", exp: "The middle layer is the Application/Web Server, also known as the Business Logic Layer." },
+      { q: "What is the primary purpose of a schema diagram?", opts: ["To show the actual data", "To display most aspects of a database schema", "To explain the code", "To list user passwords"], ans: "B", exp: "A schema diagram illustrates the structure of the database (tables, relationships)." },
+      { q: "Which of the following is NOT a category of data models?", opts: ["Conceptual", "Physical", "Implementation", "Algorithmic"], ans: "D", exp: "The categories are Conceptual, Physical, Implementation, and Self-describing." },
+      { q: "Which DBMS interface is designed for naive users to fill in blanks?", opts: ["Menu-based", "Forms-based", "Graphics-based", "Natural Language"], ans: "B", exp: "Forms-based interfaces are designed for filling in entries (e.g., bank tellers)." },
+      { q: "What is the main advantage of the Relational Model?", opts: ["Uses complex pointers", "Simple to construct and operate, using tables", "Requires no constraints", "Only works for single users"], ans: "B", exp: "The relational model's tabular structure is simple and dominant in commercial systems." },
+      { q: "In a 2-tier client-server architecture, what standard API is used for database access?", opts: ["HTML", "ODBC", "FTP", "SMTP"], ans: "B", exp: "ODBC (Open Database Connectivity) is a standard API used in 2-tier systems." },
+      { q: "Which of the following is a true statement about the Conceptual Schema?", opts: ["It describes the physical storage", "It describes the structure and constraints for the whole database community", "It describes individual user views", "It changes every time data is updated"], ans: "B", exp: "The conceptual schema provides the global logical view for the community of users." },
+      { q: "Which of the following is NOT a benefit of a DBMS?", opts: ["Reduced data redundancy", "Enforced integrity", "Increased program-data dependency", "Sharing of data"], ans: "C", exp: "A DBMS *reduces* program-data dependency; it does not increase it." },
+      { q: "The term 'extension' in database terminology refers to:", opts: ["The schema", "The metadata", "The database state (actual data)", "The physical storage format"], ans: "C", exp: "Extension = state = actual data at a given time." },
+      { q: "Which language is used by a DBA to set system parameters and grant authorizations?", opts: ["Natural Language Interface", "Forms Interface", "DBA Interface", "Parametric Interface"], ans: "C", exp: "DBA interfaces allow creating accounts, granting authorizations, and setting parameters." },
+      { q: "What does a 'data source' refer to in a 2-tier architecture?", opts: ["The physical server hard drive", "A DBMS or non-DBMS file/software system accessed by a client via API", "The central CPU", "The application presentation layer"], ans: "B", exp: "Data sources are the systems (DBMS or files) that clients connect to via ODBC/JDBC." },
+      { q: "Which data model was standardized by CODASYL in 1971?", opts: ["Relational", "Hierarchical", "Network", "Object-Oriented"], ans: "C", exp: "The Network model was standardized by the CODASYL DBTG report in 1971." },
+      { q: "Which navigational command is associated with the Network Data Model?", opts: ["SELECT", "FIND owner", "CREATE TABLE", "JOIN"], ans: "B", exp: "Network models use navigational commands like FIND, FIND owner, and FIND NEXT." },
+      { q: "Which company introduced the Universal Server that pioneered the Object-Relational model?", opts: ["Oracle", "Informix", "Microsoft", "IBM"], ans: "B", exp: "Informix Universal Server started the trend of blending object concepts into relational DBMSs." },
+      { q: "In a DBMS, 'Program-data independence' means:", opts: ["Data is stored in a separate file", "Changing the database structure doesn't require changing application programs", "Programs can't access data", "Data is independent of the computer"], ans: "B", exp: "Program-data independence separates the physical data definition from the application code." },
+      { q: "What is the primary role of a System Analyst?", opts: ["Write SQL queries", "Design application specifications and communicate with users", "Build DBMS software", "Repair hardware"], ans: "B", exp: "System analysts design the application specifications by understanding user needs." },
+      { q: "Which interface uses free-text English requests?", opts: ["Forms-based", "Natural Language", "Graphics-based", "Menu-based"], ans: "B", exp: "Natural Language interfaces accept free-text English queries." },
+      { q: "Which of the following is a 'worker behind the scene'?", opts: ["End-user", "DBA", "Tool Developer", "Database Designer"], ans: "C", exp: "Workers behind the scene include system designers, tool developers, and operators." },
+      { q: "Which mapping translates requests from the Conceptual level to the Internal level?", opts: ["External/Conceptual mapping", "Conceptual/Internal mapping", "Internal/Physical mapping", "Application/Conceptual mapping"], ans: "B", exp: "The Conceptual/Internal mapping translates logical requests to physical storage." },
+      { q: "What is the key difference between a 2-tier and 3-tier architecture?", opts: ["2-tier has an intermediate server", "3-tier has an intermediate application/web server", "3-tier does not use a database", "2-tier is only for web applications"], ans: "B", exp: "The 3-tier adds an intermediate layer (Application/Web Server) for security and business logic." }
+    ]
+  },
+  2: {
+    tf: [
+      { q: "The external schema hides the physical storage details from the user.", ans: true, exp: "External schemas show user views and hide physical/conceptual details." },
+      { q: "A DBMS reduces data redundancy but completely eliminates it.", ans: false, exp: "DBMS uses controlled redundancy; some redundancy may remain for performance." },
+      { q: "The Database State is also known as the extension.", ans: true, exp: "State is the extension; Schema is the intension." },
+      { q: "The DDL is used to manipulate the data in the database.", ans: false, exp: "DML (Data Manipulation Language) manipulates data. DDL defines schema." },
+      { q: "A Naive user typically writes complex SQL queries.", ans: false, exp: "Sophisticated users write complex queries. Naive users use canned transactions." },
+      { q: "A valid database state must satisfy the constraints defined in the schema.", ans: true, exp: "By definition, a valid state obeys all constraints." },
+      { q: "In a 2-tier architecture, clients can use ODBC or JDBC.", ans: true, exp: "These are standard APIs used by clients in 2-tier architectures." },
+      { q: "The Network data model uses a tree structure.", ans: false, exp: "The Network model uses a graph structure. Hierarchical uses a tree." },
+      { q: "Program-data independence is a characteristic of traditional file systems.", ans: false, exp: "File systems suffer from program-data dependency. DBMS provides independence." },
+      { q: "A catalog stores metadata.", ans: true, exp: "Catalog stores the schema description (metadata)." }
+    ],
+    fib: [
+      { q: "A collection of related data managed by a DBMS is a ____.", ans: ["database"], display_ans: "Database", exp: "This is the fundamental definition of a database." },
+      { q: "The capacity to change the internal schema without changing the conceptual schema is ____ data independence.", ans: ["physical"], display_ans: "Physical", exp: "Physical independence isolates the logical schema from physical changes." },
+      { q: "The ____ schema describes the structure and constraints for the whole database community.", ans: ["conceptual"], display_ans: "Conceptual", exp: "The conceptual schema is the global logical view." },
+      { q: "The term ____ refers to the data about data.", ans: ["metadata", "meta-data"], display_ans: "Metadata", exp: "Metadata describes the database structure." },
+      { q: "The ____ model was the first commercial DBMS, implemented by Honeywell in 1964.", ans: ["network"], display_ans: "Network", exp: "The Network model (IDS system) was an early commercial DBMS." },
+      { q: "A(n) ____ is a predefined, well-tested operation executed by naive users.", ans: ["canned transaction"], display_ans: "Canned Transaction", exp: "Examples include bank withdrawals." },
+      { q: "____ is a non-procedural language that specifies WHAT data to retrieve.", ans: ["sql"], display_ans: "SQL", exp: "SQL is declarative (non-procedural)." }
+    ],
+    mcq: [
+      { q: "Which of the following is a low-level DBMS interface?", opts: ["Forms-based", "Menu-based", "Query language interface", "Natural language"], ans: "C", exp: "Query language (like SQL) is often considered a standalone or programmer interface, contrasting user-friendly ones." },
+      { q: "What does SDL stand for?", opts: ["Storage Definition Language", "Standard Data Language", "Schema Design Language", "System Definition Language"], ans: "A", exp: "SDL defines the internal schema." },
+      { q: "Which data model represents data as tables with rows and columns?", opts: ["Hierarchical", "Network", "Relational", "Object-Oriented"], ans: "C", exp: "The Relational model (E.F. Codd) uses tables." },
+      { q: "The External/Conceptual mapping translates requests between which levels?", opts: ["External and Internal", "External and Conceptual", "Conceptual and Internal", "Internal and Physical"], ans: "B", exp: "It maps user views to the global logical schema." },
+      { q: "What is the primary function of the DBA?", opts: ["Write complex SQL queries", "Authorize access and monitor efficiency", "Build indexing tools", "Design the web interface"], ans: "B", exp: "The DBA manages users, resources, and performance." },
+      { q: "Which of the following is an example of a self-describing data model?", opts: ["Relational", "Hierarchical", "XML", "Network"], ans: "C", exp: "XML data includes its own tags/description." },
+      { q: "Which schema defines the physical storage structures?", opts: ["External", "Conceptual", "Internal", "Logical"], ans: "C", exp: "Internal schema is the physical layer." },
+      { q: "Which DBMS characteristic ensures that either all parts of a transaction succeed or none do?", opts: ["Atomicity", "Data isolation", "Redundancy", "Program-data independence"], ans: "A", exp: "Atomicity is a key transaction property." },
+      { q: "A 'graphics-based' interface typically allows users to:", opts: ["Type free text", "Fill in a form", "Point, click, and drag-and-drop", "Use voice commands"], ans: "C", exp: "Graphics interfaces use visual elements and mouse actions." },
+      { q: "Which of the following describes the 'Extension'?", opts: ["The database schema", "The actual data at a moment in time", "The metadata", "The DBMS software"], ans: "B", exp: "Extension = state = actual data." },
+      { q: "Which model was proposed by E.F. Codd in 1970?", opts: ["Network", "Hierarchical", "Relational", "Object-Relational"], ans: "C", exp: "Codd proposed the relational model." },
+      { q: "Which of the following is NOT a function of a DBMS?", opts: ["Providing persistent storage", "Enforcing integrity constraints", "Compiling Java source code", "Backup and recovery"], ans: "C", exp: "DBMS does not compile Java code." },
+      { q: "Which language is used to define the external schema?", opts: ["DDL", "SDL", "VDL", "DML"], ans: "C", exp: "View Definition Language (VDL) defines external schemas." },
+      { q: "Table Based: According to the table below, what grade did Student 17 receive in Section 112?", table: "<table><tr><th>Student_number</th><th>Section_identifier</th><th>Grade</th></tr><tr><td>17</td><td>112</td><td>B</td></tr><tr><td>17</td><td>119</td><td>C</td></tr></table>", opts: ["A", "B", "C", "D"], ans: "B", exp: "The intersection of Student 17 and Section 112 shows a grade of B." },
+      { q: "Table Based: Looking at the table below, which course number has 'Knuth' as the instructor?", table: "<table><tr><th>Course_number</th><th>Semester</th><th>Year</th><th>Instructor</th></tr><tr><td>CS1310</td><td>Fall</td><td>04</td><td>Anderson</td></tr><tr><td>CS3320</td><td>Spring</td><td>05</td><td>Knuth</td></tr></table>", opts: ["CS1310", "CS3320", "Fall", "04"], ans: "B", exp: "The row with Knuth corresponds to CS3320." },
+      { q: "The term 'Mini-world' refers to:", opts: ["A small DBMS", "A subset of the real world stored in a database", "A miniature computer", "A small database file"], ans: "B", exp: "Mini-world is the part of reality modeled by the DB." },
+      { q: "What is a major disadvantage of the file-based approach?", opts: ["Too expensive", "Program-data dependency", "Too many indexes", "Too secure"], ans: "B", exp: "File systems tightly couple data definitions with apps." },
+      { q: "Which architecture uses an intermediate Application Server?", opts: ["Centralized", "2-Tier", "3-Tier", "File-based"], ans: "C", exp: "3-Tier adds the app server layer." },
+      { q: "The hierarchical model uses which type of structure?", opts: ["Graph", "Tree", "Table", "Object"], ans: "B", exp: "Hierarchical is a tree (parent-child)." },
+      { q: "Which of the following is a high-level DML?", opts: ["SQL", "C++", "Assembly", "Java"], ans: "A", exp: "SQL is high-level/non-procedural." },
+      { q: "What does the Conceptual/Internal mapping translate?", opts: ["External to Conceptual", "Conceptual to Internal", "Internal to Physical", "Physical to External"], ans: "B", exp: "It maps the global logical view to the physical storage." },
+      { q: "A person using a mobile banking app is typically a:", opts: ["DBA", "Naive user", "Sophisticated user", "Tool developer"], ans: "B", exp: "Mobile apps use canned transactions for naive users." },
+      { q: "What is the difference between the schema and the state?", opts: ["Schema changes often; state changes rarely", "Schema is the data; state is the blueprint", "Schema changes rarely; state changes often", "They are the same"], ans: "C", exp: "Schema is the blueprint (intension), state is data (extension)." },
+      { q: "Which interface allows users to query by drawing or clicking on a schema diagram?", opts: ["Forms-based", "Graphics-based", "Menu-based", "Natural language"], ans: "B", exp: "Graphics interfaces are visual (point/click/drag)." },
+      { q: "The term 'Database System' refers to:", opts: ["The data only", "The DBMS software only", "The DBMS software and the data", "The application programs only"], ans: "C", exp: "It includes the DBMS and the database." },
+      { q: "Which level of the 3-schema architecture uses a conceptual or implementation data model?", opts: ["External level", "Internal level", "Conceptual level", "Physical level"], ans: "C", exp: "The conceptual schema uses a conceptual or implementation model." },
+      { q: "Which of the following is NOT a legacy data model?", opts: ["Network", "Hierarchical", "Relational", "None of the above"], ans: "C", exp: "Relational is currently used, not legacy." },
+      { q: "What is the primary purpose of the DBMS catalog?", opts: ["To store actual data", "To store metadata (schema descriptions)", "To compile application programs", "To print reports"], ans: "B", exp: "The catalog stores metadata." },
+      { q: "What does the acronym DML stand for?", opts: ["Data Manipulation Language", "Data Management Language", "Database Manipulation Language", "Data Model Language"], ans: "A", exp: "DML manipulates data (SELECT, INSERT)." },
+      { q: "Which of the following describes the 'Initial Database State'?", opts: ["The schema", "The state when initially loaded", "The metadata", "A backup"], ans: "B", exp: "Initial state is the data loaded initially." },
+      { q: "Which of the following is an example of a sophisticated user?", opts: ["Bank teller", "Business analyst writing complex queries", "Mobile app user", "DBA"], ans: "B", exp: "Business analysts are sophisticated users." },
+      { q: "Which mapping transforms requests from the External level to the Conceptual level?", opts: ["External/Conceptual mapping", "Conceptual/Internal mapping", "Internal/Physical mapping", "Application/Conceptual mapping"], ans: "A", exp: "It maps user views to the conceptual schema." },
+      { q: "Which of the following is true about the Relational model?", opts: ["It is a legacy model", "It is the most dominant model today", "It uses pointers", "It is only for single users"], ans: "B", exp: "Relational is currently dominant." },
+      { q: "Which of the following is a characteristic of the database approach?", opts: ["Program-data dependency", "Self-describing nature", "Uncontrolled redundancy", "Data isolation"], ans: "B", exp: "Self-describing (catalog) is a key characteristic." },
+      { q: "What does a DBA use to set system parameters and access paths?", opts: ["Forms interface", "DBA Interface", "Natural language", "Graphics interface"], ans: "B", exp: "DBA interfaces allow setting parameters." },
+      { q: "Which model handles M:N relationships using complex pointers?", opts: ["Hierarchical", "Network", "Relational", "XML"], ans: "B", exp: "Network model handles M:N relationships." },
+      { q: "Which of the following is a recent technology data model?", opts: ["Hierarchical", "Network", "NoSQL", "Relational"], ans: "C", exp: "NoSQL is a recent technology." },
+      { q: "What is the role of a Database Designer?", opts: ["Write SQL", "Define content, structure, constraints, and functions", "Build tools", "Repair hardware"], ans: "B", exp: "Designers define the database structure and constraints." },
+      { q: "Which of the following is a benefit of the DBMS approach?", opts: ["Increased data redundancy", "Program-data dependency", "Enforcement of standards", "Data isolation"], ans: "C", exp: "Enforcing standards is a key benefit." },
+      { q: "Which schema describes the physical storage and access paths?", opts: ["External schema", "Conceptual schema", "Internal schema", "Logical schema"], ans: "C", exp: "Internal schema is the physical layer." },
+      { q: "What is a 'canned transaction'?", opts: ["A deleted transaction", "A predefined, well-tested function executed by naive users", "A transaction that is still being processed", "A transaction only for sophisticated users"], ans: "B", exp: "Canned transactions are predefined." },
+      { q: "Which of the following is NOT a type of DBMS interface?", opts: ["Menu-based", "Forms-based", "Compilation-based", "Natural Language"], ans: "C", exp: "Compilation is not an interface." },
+      { q: "Which level of the 3-schema architecture is responsible for user views?", opts: ["External", "Conceptual", "Internal", "Physical"], ans: "A", exp: "External schema provides user views." },
+      { q: "What is the main advantage of the 3-tier architecture?", opts: ["Security", "Speed", "Cost", "Storage"], ans: "A", exp: "The 3-tier architecture improves security by hiding the database." },
+      { q: "Which of the following is a type of DML?", opts: ["DDL", "SDL", "VDL", "High-level DML"], ans: "D", exp: "High-level DML is a type of DML." },
+      { q: "Which model uses tags to describe data?", opts: ["Relational", "Hierarchical", "XML", "Network"], ans: "C", exp: "XML uses tags." },
+      { q: "What is the purpose of the External/Conceptual mapping?", opts: ["To translate user requests to conceptual schema", "To translate conceptual to internal", "To translate internal to physical", "To translate data to metadata"], ans: "A", exp: "It translates external views to the conceptual schema." },
+      { q: "Which of the following is a characteristic of a DBMS?", opts: ["Reducing data redundancy", "Increasing data isolation", "Program-data dependency", "Lack of security"], ans: "A", exp: "DBMS reduces data redundancy." },
+      { q: "What is the most common architecture for web applications?", opts: ["Centralized", "2-Tier", "3-Tier", "Standalone"], ans: "C", exp: "3-Tier is common for web apps." }
+    ]
+  },
+  3: {
+    tf: [
+      { q: "The relational model uses pointers to navigate data.", ans: false, exp: "The relational model uses tables and foreign keys, not pointers." },
+      { q: "Physical data independence is the ability to change the internal schema without changing the conceptual schema.", ans: true, exp: "Physical independence isolates the logical schema from physical changes." },
+      { q: "A menu-based interface is popular for web browsing.", ans: true, exp: "Menus are commonly used on the web for casual users." },
+      { q: "The schema is also called the extension.", ans: false, exp: "Schema is the intension. State is the extension." },
+      { q: "In a 3-tier architecture, the client contains the business logic.", ans: false, exp: "The intermediate Application/Web Server contains the business logic." },
+      { q: "The DBMS catalog is used to store the application programs.", ans: false, exp: "The catalog stores metadata (schema descriptions), not application code." },
+      { q: "SQL is a procedural language.", ans: false, exp: "SQL is non-procedural (declarative)." },
+      { q: "A constraint specifies a restriction on valid data.", ans: true, exp: "Constraints enforce data validity (e.g., primary keys)." },
+      { q: "Hierarchical databases use a tree structure.", ans: true, exp: "They are tree-based (parent-child)." },
+      { q: "The DBA is responsible for authorizing access to the database.", ans: true, exp: "The DBA handles security and access control." }
+    ],
+    fib: [
+      { q: "A software system used to create and manage a database is called a ____.", ans: ["dbms", "database management system"], display_ans: "DBMS", exp: "Database Management System." },
+      { q: "The ____ schema describes the physical storage structures.", ans: ["internal"], display_ans: "Internal", exp: "Internal schema is the physical layer." },
+      { q: "____ data independence is the ability to change the conceptual schema without changing the external schema.", ans: ["logical"], display_ans: "Logical", exp: "Logical independence affects apps/views." },
+      { q: "A(n) ____ user uses predefined transactions and is the largest population of users.", ans: ["naive"], display_ans: "Naive", exp: "Naive/parametric users use canned transactions." },
+      { q: "The ____ model uses a graph structure with pointers.", ans: ["network"], display_ans: "Network", exp: "Network model (CODASYL) uses graphs." },
+      { q: "The ____ language is used to define the conceptual schema.", ans: ["ddl", "data definition language"], display_ans: "DDL", exp: "Data Definition Language." },
+      { q: "A(n) ____ state is one that satisfies all constraints.", ans: ["valid"], display_ans: "Valid", exp: "Valid state obeys the schema constraints." }
+    ],
+    mcq: [
+      { q: "Which of the following is NOT a DBMS interface?", opts: ["Menu-based", "Forms-based", "Compilation-based", "Natural Language"], ans: "C", exp: "Compilation-based is not an interface." },
+      { q: "What does DDL stand for?", opts: ["Data Definition Language", "Data Dictionary Language", "Database Design Language", "Data Manipulation Language"], ans: "A", exp: "Data Definition Language." },
+      { q: "Which model is tree-structured?", opts: ["Relational", "Network", "Hierarchical", "Object"], ans: "C", exp: "Hierarchical is tree-structured." },
+      { q: "The actual data stored at a particular moment is called:", opts: ["Schema", "Intension", "State", "Metadata"], ans: "C", exp: "State is the actual data." },
+      { q: "Which API is used for Java database access?", opts: ["ODBC", "JDBC", "ADBC", "JDBC++"], ans: "B", exp: "JDBC is for Java." },
+      { q: "What does the DBMS server provide in 2-tier architecture?", opts: ["Presentation logic", "Query and transaction services", "Web browsing", "Print services"], ans: "B", exp: "DBMS server provides query/transaction services." },
+      { q: "What is a major limitation of a DBMS?", opts: ["Data redundancy", "High initial cost", "Program-data dependency", "Inability to handle users"], ans: "B", exp: "High initial cost is a limitation." },
+      { q: "Which schema describes the physical storage structures?", opts: ["External", "Conceptual", "Internal", "View"], ans: "C", exp: "Internal schema is physical." },
+      { q: "Why use a 3-tier architecture?", opts: ["To reduce cost", "To improve security", "To make the DBMS run faster", "To store more data"], ans: "B", exp: "Security is the main reason." },
+      { q: "Which data model is self-describing?", opts: ["Network", "Hierarchical", "XML", "Relational"], ans: "C", exp: "XML is self-describing." },
+      { q: "Who uses canned transactions?", opts: ["Sophisticated users", "DBA", "Naive users", "Database designers"], ans: "C", exp: "Naive users use canned transactions." },
+      { q: "What does SDL stand for?", opts: ["Storage Definition Language", "Schema Definition Language", "Standard Data Language", "System Data Language"], ans: "A", exp: "Storage Definition Language." },
+      { q: "The ability to change the internal schema without changing the conceptual schema is:", opts: ["Logical independence", "Physical independence", "External independence", "Schema independence"], ans: "B", exp: "Physical independence." },
+      { q: "Which component stores the database description?", opts: ["Data files", "Catalog", "App programs", "Query optimizer"], ans: "B", exp: "The catalog stores descriptions." },
+      { q: "Who proposed the relational model?", opts: ["E.F. Codd", "Bill Gates", "Charles Babbage", "Larry Ellison"], ans: "A", exp: "E.F. Codd proposed it." },
+      { q: "Who is a 'worker behind the scene'?", opts: ["Naive user", "DBA", "Tool developer", "Casual user"], ans: "C", exp: "Tool developer is behind the scene." },
+      { q: "What enforces restrictions on valid data?", opts: ["Construct", "Constraint", "Schema", "State"], ans: "B", exp: "Constraints restrict data." },
+      { q: "Which language defines external schemas?", opts: ["DDL", "SDL", "VDL", "DML"], ans: "C", exp: "VDL defines external schemas." },
+      { q: "Which is a high-level DML?", opts: ["SQL", "Embedded C", "Assembly", "COBOL"], ans: "A", exp: "SQL is high-level DML." },
+      { q: "What is a user view?", opts: ["Intension", "Extension", "The specific portion of a database a user is interested in", "Catalog"], ans: "C", exp: "User view is the specific portion a user sees." },
+      { q: "What must change when a lower-level schema changes?", opts: ["Application programs", "External schemas", "Mappings between schemas", "All of the above"], ans: "C", exp: "Only mappings change." },
+      { q: "Which architecture combines everything into a single system?", opts: ["2-Tier", "3-Tier", "Centralized", "Distributed"], ans: "C", exp: "Centralized combines everything." },
+      { q: "Table Based: Based on the table, what is Smith's major?", table: "<table><tr><th>Name</th><th>Student_number</th><th>Class</th><th>Major</th></tr><tr><td>Smith</td><td>17</td><td>1</td><td>CS</td></tr><tr><td>Brown</td><td>8</td><td>2</td><td>CS</td></tr></table>", opts: ["CS", "1", "17", "Math"], ans: "A", exp: "Smith's major is CS." },
+      { q: "Table Based: How many credit hours is Database?", table: "<table><tr><th>Course_name</th><th>Course_number</th><th>Credit_hours</th></tr><tr><td>Data Structures</td><td>CS3320</td><td>4</td></tr><tr><td>Database</td><td>CS3380</td><td>3</td></tr></table>", opts: ["4", "3", "CS3380", "CS3320"], ans: "B", exp: "Database has 3 credit hours." },
+      { q: "Which model allows complex relationships using pointers?", opts: ["Relational", "Network", "Hierarchical", "XML"], ans: "B", exp: "Network uses pointers." },
+      { q: "What is the middle layer in 3-tier architecture?", opts: ["Presentation Layer", "Database Services Layer", "Business Logic Layer", "Physical Layer"], ans: "C", exp: "Business Logic Layer." },
+      { q: "What does a schema diagram show?", opts: ["Actual data", "Most aspects of a database schema", "Code", "Passwords"], ans: "B", exp: "Shows most aspects of schema." },
+      { q: "Which is NOT a data model category?", opts: ["Conceptual", "Physical", "Implementation", "Algorithmic"], ans: "D", exp: "Algorithmic is not a category." },
+      { q: "Which interface is for naive users?", opts: ["Menu-based", "Forms-based", "Graphics-based", "Natural Language"], ans: "B", exp: "Forms-based is for naive users." },
+      { q: "What is the main advantage of the Relational Model?", opts: ["Complex pointers", "Simple tables", "No constraints", "Single user"], ans: "B", exp: "Simple tables." },
+      { q: "Which API is used in 2-tier architecture?", opts: ["HTML", "ODBC", "FTP", "SMTP"], ans: "B", exp: "ODBC." },
+      { q: "What does the Conceptual Schema describe?", opts: ["Physical storage", "Structure for the whole community", "Individual views", "Data changes"], ans: "B", exp: "Structure for whole community." },
+      { q: "Which is NOT a DBMS benefit?", opts: ["Reduced redundancy", "Enforced integrity", "Increased program-data dependency", "Data sharing"], ans: "C", exp: "DBMS reduces dependency." },
+      { q: "What is 'extension'?", opts: ["Schema", "Metadata", "Database state", "Physical storage"], ans: "C", exp: "Extension = state." },
+      { q: "Which interface lets DBAs set parameters?", opts: ["Natural Language", "Forms", "DBA Interface", "Parametric"], ans: "C", exp: "DBA Interface." },
+      { q: "What is a 'data source'?", opts: ["Hard drive", "DBMS or file accessed via API", "CPU", "Presentation layer"], ans: "B", exp: "DBMS or file accessed via API." },
+      { q: "Which model was standardized by CODASYL?", opts: ["Relational", "Hierarchical", "Network", "Object-Oriented"], ans: "C", exp: "Network model." },
+      { q: "Which command is used in Network model?", opts: ["SELECT", "FIND owner", "CREATE TABLE", "JOIN"], ans: "B", exp: "FIND owner." },
+      { q: "Who pioneered the Object-Relational model?", opts: ["Oracle", "Informix", "Microsoft", "IBM"], ans: "B", exp: "Informix." },
+      { q: "What is Program-data independence?", opts: ["Data in separate file", "Changing DB structure doesn't require changing apps", "Programs can't access data", "Data independent of computer"], ans: "B", exp: "Changing DB structure doesn't require changing apps." },
+      { q: "What is the role of a System Analyst?", opts: ["Write SQL", "Design app specs and communicate with users", "Build DBMS", "Repair hardware"], ans: "B", exp: "Design app specs." },
+      { q: "Which interface uses free-text English?", opts: ["Forms", "Natural Language", "Graphics", "Menu"], ans: "B", exp: "Natural Language." },
+      { q: "Who is a 'worker behind the scene'?", opts: ["End-user", "DBA", "Tool Developer", "Designer"], ans: "C", exp: "Tool Developer." },
+      { q: "What does Conceptual/Internal mapping translate?", opts: ["External to Conceptual", "Conceptual to Internal", "Internal to Physical", "Physical to External"], ans: "B", exp: "Conceptual to Internal." },
+      { q: "What is the key difference between 2-tier and 3-tier?", opts: ["2-tier has intermediate server", "3-tier has intermediate server", "3-tier doesn't use DB", "2-tier is for web"], ans: "B", exp: "3-tier has intermediate server." }
+    ]
+  },
+  4: {
+    tf: [
+      { q: "The DBA is responsible for authorizing access to the database.", ans: true, exp: "The DBA manages security." },
+      { q: "A schema diagram shows the actual data in the database.", ans: false, exp: "It shows the schema structure, not the actual data." },
+      { q: "Data independence allows changing the schema without affecting application programs.", ans: true, exp: "This is the core benefit of data independence." },
+      { q: "In a 2-tier architecture, the database server handles presentation logic.", ans: false, exp: "The client handles presentation; the server handles data." },
+      { q: "The relational model uses foreign keys to represent relationships.", ans: true, exp: "Foreign keys link tables in the relational model." },
+      { q: "A DBMS completely eliminates data redundancy.", ans: false, exp: "It controls redundancy but may not eliminate it completely." },
+      { q: "The internal schema describes the physical storage details.", ans: true, exp: "Internal schema is the physical layer." },
+      { q: "Naive users use canned transactions.", ans: true, exp: "Naive users run predefined transactions." },
+      { q: "The Network model is a legacy data model.", ans: true, exp: "Network is a legacy model." },
+      { q: "XML is a self-describing data model.", ans: true, exp: "XML includes tags that describe data." }
+    ],
+    fib: [
+      { q: "The ____ schema describes the user views.", ans: ["external"], display_ans: "External", exp: "External schema describes user views." },
+      { q: "The ____ model was proposed by E.F. Codd.", ans: ["relational"], display_ans: "Relational", exp: "E.F. Codd proposed the relational model." },
+      { q: "A(n) ____ is a restriction on valid data.", ans: ["constraint"], display_ans: "Constraint", exp: "Constraints restrict valid data." },
+      { q: "The capacity to change the conceptual schema without changing the external schema is ____ data independence.", ans: ["logical"], display_ans: "Logical", exp: "Logical data independence." },
+      { q: "____ is the standard API for database access in Java.", ans: ["jdbc"], display_ans: "JDBC", exp: "JDBC is for Java." },
+      { q: "The ____ tier in 3-tier architecture contains the business logic.", ans: ["middle", "application"], display_ans: "Middle/Application", exp: "The middle tier has business logic." },
+      { q: "The ____ model uses a tree structure.", ans: ["hierarchical"], display_ans: "Hierarchical", exp: "Hierarchical uses a tree." }
+    ],
+    mcq: [
+      { q: "Which of the following is a high-level DML?", opts: ["SQL", "C++", "Java", "Assembly"], ans: "A", exp: "SQL is high-level DML." },
+      { q: "Which model uses a tree structure?", opts: ["Relational", "Network", "Hierarchical", "Object"], ans: "C", exp: "Hierarchical uses a tree." },
+      { q: "What does the acronym DDL stand for?", opts: ["Data Definition Language", "Data Dictionary Language", "Database Design Language", "Data Manipulation Language"], ans: "A", exp: "Data Definition Language." },
+      { q: "What is the actual data stored at a moment called?", opts: ["Schema", "Intension", "State", "Metadata"], ans: "C", exp: "State is the actual data." },
+      { q: "Which API is used for Java database access?", opts: ["ODBC", "JDBC", "ADBC", "JDBC++"], ans: "B", exp: "JDBC is for Java." },
+      { q: "What does the DBMS server provide in 2-tier?", opts: ["Presentation logic", "Query and transaction services", "Web browsing", "Print services"], ans: "B", exp: "DBMS server provides query/transaction services." },
+      { q: "What is a major limitation of a DBMS?", opts: ["Data redundancy", "High initial cost", "Program-data dependency", "Inability to handle users"], ans: "B", exp: "High initial cost." },
+      { q: "Which schema describes physical storage structures?", opts: ["External", "Conceptual", "Internal", "View"], ans: "C", exp: "Internal schema." },
+      { q: "Why use a 3-tier architecture?", opts: ["To reduce cost", "To improve security", "To make DBMS run faster", "To store more data"], ans: "B", exp: "Security is the main reason." },
+      { q: "Which data model is self-describing?", opts: ["Network", "Hierarchical", "XML", "Relational"], ans: "C", exp: "XML is self-describing." },
+      { q: "Who uses canned transactions?", opts: ["Sophisticated users", "DBA", "Naive users", "Database designers"], ans: "C", exp: "Naive users." },
+      { q: "What does SDL stand for?", opts: ["Storage Definition Language", "Schema Definition Language", "Standard Data Language", "System Data Language"], ans: "A", exp: "Storage Definition Language." },
+      { q: "The ability to change internal schema without changing conceptual is:", opts: ["Logical independence", "Physical independence", "External independence", "Schema independence"], ans: "B", exp: "Physical independence." },
+      { q: "Which component stores the database description?", opts: ["Data files", "Catalog", "App programs", "Query optimizer"], ans: "B", exp: "The catalog." },
+      { q: "Who proposed the relational model?", opts: ["E.F. Codd", "Bill Gates", "Charles Babbage", "Larry Ellison"], ans: "A", exp: "E.F. Codd." },
+      { q: "Who is a 'worker behind the scene'?", opts: ["Naive user", "DBA", "Tool developer", "Casual user"], ans: "C", exp: "Tool developer." },
+      { q: "What enforces restrictions on valid data?", opts: ["Construct", "Constraint", "Schema", "State"], ans: "B", exp: "Constraints." },
+      { q: "Which language defines external schemas?", opts: ["DDL", "SDL", "VDL", "DML"], ans: "C", exp: "VDL." },
+      { q: "Which is a high-level DML?", opts: ["SQL", "Embedded C", "Assembly", "COBOL"], ans: "A", exp: "SQL." },
+      { q: "What is a user view?", opts: ["Intension", "Extension", "The specific portion of a database a user is interested in", "Catalog"], ans: "C", exp: "The specific portion a user is interested in." },
+      { q: "What must change when a lower-level schema changes?", opts: ["Application programs", "External schemas", "Mappings between schemas", "All of the above"], ans: "C", exp: "Mappings between schemas." },
+      { q: "Which architecture combines everything into a single system?", opts: ["2-Tier", "3-Tier", "Centralized", "Distributed"], ans: "C", exp: "Centralized." },
+      { q: "Table Based: Based on the table, what is Smith's major?", table: "<table><tr><th>Name</th><th>Student_number</th><th>Class</th><th>Major</th></tr><tr><td>Smith</td><td>17</td><td>1</td><td>CS</td></tr><tr><td>Brown</td><td>8</td><td>2</td><td>CS</td></tr></table>", opts: ["CS", "1", "17", "Math"], ans: "A", exp: "Smith's major is CS." },
+      { q: "Table Based: How many credit hours is Database?", table: "<table><tr><th>Course_name</th><th>Course_number</th><th>Credit_hours</th></tr><tr><td>Data Structures</td><td>CS3320</td><td>4</td></tr><tr><td>Database</td><td>CS3380</td><td>3</td></tr></table>", opts: ["4", "3", "CS3380", "CS3320"], ans: "B", exp: "Database has 3 credit hours." },
+      { q: "Which model allows complex relationships using pointers?", opts: ["Relational", "Network", "Hierarchical", "XML"], ans: "B", exp: "Network uses pointers." },
+      { q: "What is the middle layer in 3-tier architecture?", opts: ["Presentation Layer", "Database Services Layer", "Business Logic Layer", "Physical Layer"], ans: "C", exp: "Business Logic Layer." },
+      { q: "What does a schema diagram show?", opts: ["Actual data", "Most aspects of a database schema", "Code", "Passwords"], ans: "B", exp: "Most aspects of a database schema." },
+      { q: "Which is NOT a data model category?", opts: ["Conceptual", "Physical", "Implementation", "Algorithmic"], ans: "D", exp: "Algorithmic is not a category." },
+      { q: "Which interface is for naive users?", opts: ["Menu-based", "Forms-based", "Graphics-based", "Natural Language"], ans: "B", exp: "Forms-based." },
+      { q: "What is the main advantage of the Relational Model?", opts: ["Complex pointers", "Simple tables", "No constraints", "Single user"], ans: "B", exp: "Simple tables." },
+      { q: "Which API is used in 2-tier architecture?", opts: ["HTML", "ODBC", "FTP", "SMTP"], ans: "B", exp: "ODBC." },
+      { q: "What does the Conceptual Schema describe?", opts: ["Physical storage", "Structure for the whole community", "Individual views", "Data changes"], ans: "B", exp: "Structure for the whole community." },
+      { q: "Which is NOT a DBMS benefit?", opts: ["Reduced redundancy", "Enforced integrity", "Increased program-data dependency", "Data sharing"], ans: "C", exp: "Increased program-data dependency." },
+      { q: "What is 'extension'?", opts: ["Schema", "Metadata", "Database state", "Physical storage"], ans: "C", exp: "Database state." },
+      { q: "Which interface lets DBAs set parameters?", opts: ["Natural Language", "Forms", "DBA Interface", "Parametric"], ans: "C", exp: "DBA Interface." },
+      { q: "What is a 'data source'?", opts: ["Hard drive", "DBMS or file accessed via API", "CPU", "Presentation layer"], ans: "B", exp: "DBMS or file accessed via API." },
+      { q: "Which model was standardized by CODASYL?", opts: ["Relational", "Hierarchical", "Network", "Object-Oriented"], ans: "C", exp: "Network." },
+      { q: "Which command is used in Network model?", opts: ["SELECT", "FIND owner", "CREATE TABLE", "JOIN"], ans: "B", exp: "FIND owner." },
+      { q: "Who pioneered the Object-Relational model?", opts: ["Oracle", "Informix", "Microsoft", "IBM"], ans: "B", exp: "Informix." },
+      { q: "What is Program-data independence?", opts: ["Data in separate file", "Changing DB structure doesn't require changing apps", "Programs can't access data", "Data independent of computer"], ans: "B", exp: "Changing DB structure doesn't require changing apps." },
+      { q: "What is the role of a System Analyst?", opts: ["Write SQL", "Design app specs and communicate with users", "Build DBMS", "Repair hardware"], ans: "B", exp: "Design app specs and communicate with users." },
+      { q: "Which interface uses free-text English?", opts: ["Forms", "Natural Language", "Graphics", "Menu"], ans: "B", exp: "Natural Language." },
+      { q: "Who is a 'worker behind the scene'?", opts: ["End-user", "DBA", "Tool Developer", "Designer"], ans: "C", exp: "Tool Developer." },
+      { q: "What does Conceptual/Internal mapping translate?", opts: ["External to Conceptual", "Conceptual to Internal", "Internal to Physical", "Physical to External"], ans: "B", exp: "Conceptual to Internal." },
+      { q: "What is the key difference between 2-tier and 3-tier?", opts: ["2-tier has intermediate server", "3-tier has intermediate server", "3-tier doesn't use DB", "2-tier is for web"], ans: "B", exp: "3-tier has intermediate server." }
+    ]
+  },
+  5: {
+    tf: [
+      { q: "The external schema hides physical storage details from the user.", ans: true, exp: "External schemas show user views and hide physical details." },
+      { q: "A DBMS reduces data redundancy but completely eliminates it.", ans: false, exp: "Controlled redundancy may remain." },
+      { q: "The Database State is also known as the extension.", ans: true, exp: "State is the extension." },
+      { q: "DDL is used to manipulate data.", ans: false, exp: "DML manipulates data; DDL defines schema." },
+      { q: "Naive users typically write complex SQL queries.", ans: false, exp: "Sophisticated users write complex queries." },
+      { q: "A valid state must satisfy all constraints.", ans: true, exp: "Valid state obeys all constraints." },
+      { q: "In a 2-tier architecture, clients can use ODBC or JDBC.", ans: true, exp: "These are standard APIs." },
+      { q: "The Network data model uses a tree structure.", ans: false, exp: "Network uses a graph structure." },
+      { q: "Program-data independence is a characteristic of file systems.", ans: false, exp: "File systems have program-data dependency." },
+      { q: "A catalog stores metadata.", ans: true, exp: "Catalog stores metadata." }
+    ],
+    fib: [
+      { q: "A collection of related data managed by a DBMS is a ____.", ans: ["database"], display_ans: "Database", exp: "Fundamental definition." },
+      { q: "The capacity to change internal schema without changing conceptual is ____ data independence.", ans: ["physical"], display_ans: "Physical", exp: "Physical independence." },
+      { q: "The ____ schema describes the structure for the whole database community.", ans: ["conceptual"], display_ans: "Conceptual", exp: "Conceptual schema." },
+      { q: "The term ____ refers to data about data.", ans: ["metadata", "meta-data"], display_ans: "Metadata", exp: "Metadata." },
+      { q: "The ____ model was implemented by Honeywell in 1964.", ans: ["network"], display_ans: "Network", exp: "Network model." },
+      { q: "A(n) ____ is a predefined, well-tested operation for naive users.", ans: ["canned transaction"], display_ans: "Canned Transaction", exp: "Canned transaction." },
+      { q: "____ is a non-procedural language specifying WHAT data to retrieve.", ans: ["sql"], display_ans: "SQL", exp: "SQL." }
+    ],
+    mcq: [
+      { q: "Which is a low-level DBMS interface?", opts: ["Forms", "Menu", "Query language", "Natural language"], ans: "C", exp: "Query language interface." },
+      { q: "What does SDL stand for?", opts: ["Storage Definition Language", "Standard Data Language", "Schema Design Language", "System Definition Language"], ans: "A", exp: "Storage Definition Language." },
+      { q: "Which model represents data as tables?", opts: ["Hierarchical", "Network", "Relational", "Object"], ans: "C", exp: "Relational." },
+      { q: "The External/Conceptual mapping translates requests between:", opts: ["External and Internal", "External and Conceptual", "Conceptual and Internal", "Internal and Physical"], ans: "B", exp: "External and Conceptual." },
+      { q: "What is the primary function of the DBA?", opts: ["Write SQL", "Authorize access and monitor efficiency", "Build tools", "Design web interface"], ans: "B", exp: "Authorize access and monitor efficiency." },
+      { q: "Which is a self-describing data model?", opts: ["Relational", "Hierarchical", "XML", "Network"], ans: "C", exp: "XML." },
+      { q: "Which schema defines physical storage?", opts: ["External", "Conceptual", "Internal", "Logical"], ans: "C", exp: "Internal." },
+      { q: "Which characteristic ensures all parts of a transaction succeed or none?", opts: ["Atomicity", "Data isolation", "Redundancy", "Program-data independence"], ans: "A", exp: "Atomicity." },
+      { q: "A graphics-based interface allows users to:", opts: ["Type free text", "Fill a form", "Point, click, and drag-and-drop", "Use voice"], ans: "C", exp: "Point, click, drag-and-drop." },
+      { q: "Which describes 'Extension'?", opts: ["Schema", "Actual data at a moment", "Metadata", "DBMS software"], ans: "B", exp: "Actual data at a moment." },
+      { q: "Which model was proposed by E.F. Codd?", opts: ["Network", "Hierarchical", "Relational", "Object-Relational"], ans: "C", exp: "Relational." },
+      { q: "Which is NOT a DBMS function?", opts: ["Persistent storage", "Integrity constraints", "Compiling Java", "Backup and recovery"], ans: "C", exp: "Compiling Java." },
+      { q: "Which language defines external schemas?", opts: ["DDL", "SDL", "VDL", "DML"], ans: "C", exp: "VDL." },
+      { q: "Table Based: What grade did Student 17 get in Section 112?", table: "<table><tr><th>Student_number</th><th>Section_identifier</th><th>Grade</th></tr><tr><td>17</td><td>112</td><td>B</td></tr><tr><td>17</td><td>119</td><td>C</td></tr></table>", opts: ["A", "B", "C", "D"], ans: "B", exp: "Grade B." },
+      { q: "Table Based: Which course has 'Knuth' as instructor?", table: "<table><tr><th>Course_number</th><th>Semester</th><th>Year</th><th>Instructor</th></tr><tr><td>CS1310</td><td>Fall</td><td>04</td><td>Anderson</td></tr><tr><td>CS3320</td><td>Spring</td><td>05</td><td>Knuth</td></tr></table>", opts: ["CS1310", "CS3320", "Fall", "04"], ans: "B", exp: "CS3320." },
+      { q: "What is 'Mini-world'?", opts: ["Small DBMS", "Subset of real world stored in DB", "Miniature computer", "Small file"], ans: "B", exp: "Subset of real world." },
+      { q: "What is a disadvantage of the file-based approach?", opts: ["Too expensive", "Program-data dependency", "Too many indexes", "Too secure"], ans: "B", exp: "Program-data dependency." },
+      { q: "Which architecture uses an intermediate server?", opts: ["Centralized", "2-Tier", "3-Tier", "File-based"], ans: "C", exp: "3-Tier." },
+      { q: "The hierarchical model uses which structure?", opts: ["Graph", "Tree", "Table", "Object"], ans: "B", exp: "Tree." },
+      { q: "Which is a high-level DML?", opts: ["SQL", "C++", "Assembly", "Java"], ans: "A", exp: "SQL." },
+      { q: "What does Conceptual/Internal mapping translate?", opts: ["External to Conceptual", "Conceptual to Internal", "Internal to Physical", "Physical to External"], ans: "B", exp: "Conceptual to Internal." },
+      { q: "A mobile banking app user is typically a:", opts: ["DBA", "Naive user", "Sophisticated user", "Tool developer"], ans: "B", exp: "Naive user." },
+      { q: "What is the difference between schema and state?", opts: ["Schema changes often; state rarely", "Schema is data; state is blueprint", "Schema changes rarely; state changes often", "They are the same"], ans: "C", exp: "Schema changes rarely; state changes often." },
+      { q: "Which interface lets users query by clicking a schema diagram?", opts: ["Forms", "Graphics", "Menu", "Natural language"], ans: "B", exp: "Graphics." },
+      { q: "What is a 'Database System'?", opts: ["Data only", "DBMS software only", "DBMS software and data", "App programs only"], ans: "C", exp: "DBMS software and data." },
+      { q: "Which level uses a conceptual or implementation data model?", opts: ["External", "Internal", "Conceptual", "Physical"], ans: "C", exp: "Conceptual." },
+      { q: "Which is NOT a legacy data model?", opts: ["Network", "Hierarchical", "Relational", "None"], ans: "C", exp: "Relational." },
+      { q: "What is the purpose of the DBMS catalog?", opts: ["Store actual data", "Store metadata", "Compile programs", "Print reports"], ans: "B", exp: "Store metadata." },
+      { q: "What does DML stand for?", opts: ["Data Manipulation Language", "Data Management Language", "Database Manipulation Language", "Data Model Language"], ans: "A", exp: "Data Manipulation Language." },
+      { q: "What is the 'Initial Database State'?", opts: ["Schema", "State when initially loaded", "Metadata", "A backup"], ans: "B", exp: "State when initially loaded." },
+      { q: "Who is a sophisticated user?", opts: ["Bank teller", "Business analyst writing complex queries", "Mobile app user", "DBA"], ans: "B", exp: "Business analyst." },
+      { q: "Which mapping transforms requests from External to Conceptual?", opts: ["External/Conceptual mapping", "Conceptual/Internal mapping", "Internal/Physical mapping", "Application/Conceptual mapping"], ans: "A", exp: "External/Conceptual mapping." },
+      { q: "Which is true about the Relational model?", opts: ["Legacy model", "Most dominant today", "Uses pointers", "Single user"], ans: "B", exp: "Most dominant today." },
+      { q: "Which is a characteristic of the database approach?", opts: ["Program-data dependency", "Self-describing nature", "Uncontrolled redundancy", "Data isolation"], ans: "B", exp: "Self-describing nature." },
+      { q: "What does a DBA use to set system parameters?", opts: ["Forms interface", "DBA Interface", "Natural language", "Graphics interface"], ans: "B", exp: "DBA Interface." },
+      { q: "Which model handles M:N relationships using complex pointers?", opts: ["Hierarchical", "Network", "Relational", "XML"], ans: "B", exp: "Network." },
+      { q: "Which is a recent technology data model?", opts: ["Hierarchical", "Network", "NoSQL", "Relational"], ans: "C", exp: "NoSQL." },
+      { q: "What is the role of a Database Designer?", opts: ["Write SQL", "Define content, structure, constraints", "Build tools", "Repair hardware"], ans: "B", exp: "Define content, structure, constraints." },
+      { q: "Which is a benefit of a DBMS?", opts: ["Increased redundancy", "Program-data dependency", "Enforcement of standards", "Data isolation"], ans: "C", exp: "Enforcement of standards." },
+      { q: "Which schema describes physical storage?", opts: ["External", "Conceptual", "Internal", "Logical"], ans: "C", exp: "Internal." },
+      { q: "What is a 'canned transaction'?", opts: ["Deleted transaction", "Predefined function for naive users", "Transaction in progress", "Transaction for sophisticated users"], ans: "B", exp: "Predefined function for naive users." },
+      { q: "Which is NOT a DBMS interface?", opts: ["Menu-based", "Forms-based", "Compilation-based", "Natural Language"], ans: "C", exp: "Compilation-based." },
+      { q: "Which level is responsible for user views?", opts: ["External", "Conceptual", "Internal", "Physical"], ans: "A", exp: "External." },
+      { q: "What is the main advantage of 3-tier architecture?", opts: ["Security", "Speed", "Cost", "Storage"], ans: "A", exp: "Security." },
+      { q: "Which is a type of DML?", opts: ["DDL", "SDL", "VDL", "High-level DML"], ans: "D", exp: "High-level DML." },
+      { q: "Which model uses tags to describe data?", opts: ["Relational", "Hierarchical", "XML", "Network"], ans: "C", exp: "XML." },
+      { q: "What is the purpose of External/Conceptual mapping?", opts: ["Translate user requests to conceptual", "Translate conceptual to internal", "Translate internal to physical", "Translate data to metadata"], ans: "A", exp: "Translate user requests to conceptual." },
+      { q: "Which is a characteristic of a DBMS?", opts: ["Reducing redundancy", "Increasing isolation", "Program-data dependency", "Lack of security"], ans: "A", exp: "Reducing redundancy." },
+      { q: "What is the most common architecture for web apps?", opts: ["Centralized", "2-Tier", "3-Tier", "Standalone"], ans: "C", exp: "3-Tier." }
+    ]
+  },
+  6: {
+    tf: [
+      { q: "The relational model uses pointers to navigate data.", ans: false, exp: "The relational model uses tables and foreign keys." },
+      { q: "Physical data independence is the ability to change the internal schema without changing the conceptual schema.", ans: true, exp: "Physical independence isolates logical from physical." },
+      { q: "A menu-based interface is popular for web browsing.", ans: true, exp: "Menus are used on the web." },
+      { q: "The schema is also called the extension.", ans: false, exp: "Schema is intension; state is extension." },
+      { q: "In a 3-tier architecture, the client contains business logic.", ans: false, exp: "The middle tier contains business logic." },
+      { q: "The DBMS catalog stores application programs.", ans: false, exp: "It stores metadata." },
+      { q: "SQL is a procedural language.", ans: false, exp: "SQL is non-procedural." },
+      { q: "A constraint specifies a restriction on valid data.", ans: true, exp: "Constraints enforce validity." },
+      { q: "Hierarchical databases use a tree structure.", ans: true, exp: "They are tree-based." },
+      { q: "The DBA authorizes access to the database.", ans: true, exp: "The DBA handles security." }
+    ],
+    fib: [
+      { q: "A software system to create and manage a database is a ____.", ans: ["dbms", "database management system"], display_ans: "DBMS", exp: "DBMS." },
+      { q: "The ____ schema describes physical storage structures.", ans: ["internal"], display_ans: "Internal", exp: "Internal schema." },
+      { q: "____ data independence changes conceptual without changing external.", ans: ["logical"], display_ans: "Logical", exp: "Logical independence." },
+      { q: "A(n) ____ user uses predefined transactions.", ans: ["naive"], display_ans: "Naive", exp: "Naive user." },
+      { q: "The ____ model uses a graph structure with pointers.", ans: ["network"], display_ans: "Network", exp: "Network model." },
+      { q: "The ____ language defines the conceptual schema.", ans: ["ddl", "data definition language"], display_ans: "DDL", exp: "DDL." },
+      { q: "A(n) ____ state satisfies all constraints.", ans: ["valid"], display_ans: "Valid", exp: "Valid state." }
+    ],
+    mcq: [
+      { q: "Which is NOT a DBMS interface?", opts: ["Menu-based", "Forms-based", "Compilation-based", "Natural Language"], ans: "C", exp: "Compilation-based." },
+      { q: "What does DDL stand for?", opts: ["Data Definition Language", "Data Dictionary Language", "Database Design Language", "Data Manipulation Language"], ans: "A", exp: "Data Definition Language." },
+      { q: "Which model is tree-structured?", opts: ["Relational", "Network", "Hierarchical", "Object"], ans: "C", exp: "Hierarchical." },
+      { q: "Actual data at a moment is called:", opts: ["Schema", "Intension", "State", "Metadata"], ans: "C", exp: "State." },
+      { q: "Which API is for Java?", opts: ["ODBC", "JDBC", "ADBC", "JDBC++"], ans: "B", exp: "JDBC." },
+      { q: "What does the DBMS server provide in 2-tier?", opts: ["Presentation logic", "Query and transaction services", "Web browsing", "Print services"], ans: "B", exp: "Query and transaction services." },
+      { q: "Major limitation of a DBMS?", opts: ["Data redundancy", "High initial cost", "Program-data dependency", "Inability to handle users"], ans: "B", exp: "High initial cost." },
+      { q: "Which schema describes physical storage?", opts: ["External", "Conceptual", "Internal", "View"], ans: "C", exp: "Internal." },
+      { q: "Why use 3-tier?", opts: ["Reduce cost", "Improve security", "Faster DBMS", "Store more data"], ans: "B", exp: "Improve security." },
+      { q: "Which is self-describing?", opts: ["Network", "Hierarchical", "XML", "Relational"], ans: "C", exp: "XML." },
+      { q: "Who uses canned transactions?", opts: ["Sophisticated", "DBA", "Naive", "Designers"], ans: "C", exp: "Naive." },
+      { q: "What does SDL stand for?", opts: ["Storage Definition Language", "Schema Definition Language", "Standard Data Language", "System Data Language"], ans: "A", exp: "Storage Definition Language." },
+      { q: "Change internal without changing conceptual is:", opts: ["Logical independence", "Physical independence", "External independence", "Schema independence"], ans: "B", exp: "Physical independence." },
+      { q: "Which component stores descriptions?", opts: ["Data files", "Catalog", "App programs", "Query optimizer"], ans: "B", exp: "Catalog." },
+      { q: "Who proposed the relational model?", opts: ["E.F. Codd", "Bill Gates", "Charles Babbage", "Larry Ellison"], ans: "A", exp: "E.F. Codd." },
+      { q: "Who is a 'worker behind the scene'?", opts: ["Naive user", "DBA", "Tool developer", "Casual user"], ans: "C", exp: "Tool developer." },
+      { q: "What enforces restrictions on data?", opts: ["Construct", "Constraint", "Schema", "State"], ans: "B", exp: "Constraint." },
+      { q: "Which language defines external schemas?", opts: ["DDL", "SDL", "VDL", "DML"], ans: "C", exp: "VDL." },
+      { q: "Which is a high-level DML?", opts: ["SQL", "Embedded C", "Assembly", "COBOL"], ans: "A", exp: "SQL." },
+      { q: "What is a user view?", opts: ["Intension", "Extension", "Specific portion a user sees", "Catalog"], ans: "C", exp: "Specific portion a user sees." },
+      { q: "What changes when a lower schema changes?", opts: ["App programs", "External schemas", "Mappings", "All"], ans: "C", exp: "Mappings." },
+      { q: "Which architecture is a single system?", opts: ["2-Tier", "3-Tier", "Centralized", "Distributed"], ans: "C", exp: "Centralized." },
+      { q: "Table Based: Smith's major?", table: "<table><tr><th>Name</th><th>Student_number</th><th>Class</th><th>Major</th></tr><tr><td>Smith</td><td>17</td><td>1</td><td>CS</td></tr><tr><td>Brown</td><td>8</td><td>2</td><td>CS</td></tr></table>", opts: ["CS", "1", "17", "Math"], ans: "A", exp: "CS." },
+      { q: "Table Based: Credit hours for Database?", table: "<table><tr><th>Course_name</th><th>Course_number</th><th>Credit_hours</th></tr><tr><td>Data Structures</td><td>CS3320</td><td>4</td></tr><tr><td>Database</td><td>CS3380</td><td>3</td></tr></table>", opts: ["4", "3", "CS3380", "CS3320"], ans: "B", exp: "3." },
+      { q: "Which model uses pointers?", opts: ["Relational", "Network", "Hierarchical", "XML"], ans: "B", exp: "Network." },
+      { q: "Middle layer in 3-tier?", opts: ["Presentation", "Database Services", "Business Logic", "Physical"], ans: "C", exp: "Business Logic." },
+      { q: "What does a schema diagram show?", opts: ["Actual data", "Most aspects of a schema", "Code", "Passwords"], ans: "B", exp: "Most aspects of a schema." },
+      { q: "NOT a data model category?", opts: ["Conceptual", "Physical", "Implementation", "Algorithmic"], ans: "D", exp: "Algorithmic." },
+      { q: "Interface for naive users?", opts: ["Menu", "Forms", "Graphics", "Natural Language"], ans: "B", exp: "Forms." },
+      { q: "Advantage of Relational Model?", opts: ["Complex pointers", "Simple tables", "No constraints", "Single user"], ans: "B", exp: "Simple tables." },
+      { q: "API in 2-tier?", opts: ["HTML", "ODBC", "FTP", "SMTP"], ans: "B", exp: "ODBC." },
+      { q: "What does Conceptual Schema describe?", opts: ["Physical storage", "Structure for whole community", "Individual views", "Data changes"], ans: "B", exp: "Structure for whole community." },
+      { q: "NOT a DBMS benefit?", opts: ["Reduced redundancy", "Enforced integrity", "Increased program-data dependency", "Data sharing"], ans: "C", exp: "Increased program-data dependency." },
+      { q: "What is 'extension'?", opts: ["Schema", "Metadata", "State", "Physical storage"], ans: "C", exp: "State." },
+      { q: "Interface to set parameters?", opts: ["Natural Language", "Forms", "DBA Interface", "Parametric"], ans: "C", exp: "DBA Interface." },
+      { q: "What is a 'data source'?", opts: ["Hard drive", "DBMS or file via API", "CPU", "Presentation layer"], ans: "B", exp: "DBMS or file via API." },
+      { q: "Model standardized by CODASYL?", opts: ["Relational", "Hierarchical", "Network", "Object-Oriented"], ans: "C", exp: "Network." },
+      { q: "Command in Network model?", opts: ["SELECT", "FIND owner", "CREATE TABLE", "JOIN"], ans: "B", exp: "FIND owner." },
+      { q: "Who pioneered Object-Relational?", opts: ["Oracle", "Informix", "Microsoft", "IBM"], ans: "B", exp: "Informix." },
+      { q: "Program-data independence means:", opts: ["Data in separate file", "Changing DB doesn't require changing apps", "Programs can't access data", "Data independent of computer"], ans: "B", exp: "Changing DB doesn't require changing apps." },
+      { q: "Role of System Analyst?", opts: ["Write SQL", "Design specs and talk to users", "Build DBMS", "Repair hardware"], ans: "B", exp: "Design specs and talk to users." },
+      { q: "Interface with free-text English?", opts: ["Forms", "Natural Language", "Graphics", "Menu"], ans: "B", exp: "Natural Language." },
+      { q: "Worker behind the scene?", opts: ["End-user", "DBA", "Tool Developer", "Designer"], ans: "C", exp: "Tool Developer." },
+      { q: "Conceptual/Internal mapping translates:", opts: ["External to Conceptual", "Conceptual to Internal", "Internal to Physical", "Physical to External"], ans: "B", exp: "Conceptual to Internal." },
+      { q: "Difference between 2-tier and 3-tier?", opts: ["2-tier has intermediate server", "3-tier has intermediate server", "3-tier doesn't use DB", "2-tier is for web"], ans: "B", exp: "3-tier has intermediate server." }
+    ]
+  }
+};
+
+let currentExam = 1;
+let seconds = 0;
+let timerInterval;
+
+function startTimer() {
+  clearInterval(timerInterval);
+  seconds = 0;
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    seconds++;
+    updateTimerDisplay();
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+  const s = String(seconds % 60).padStart(2, '0');
+  document.getElementById('timer').textContent = m + ':' + s;
+}
+
+function switchExam(num) {
+  currentExam = num;
+  document.querySelectorAll('.btn-exam').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.btn-exam')[num - 1].classList.add('active');
+  renderExam();
+  startTimer();
+  document.getElementById('scoreBanner').style.display = 'none';
+}
+
+function renderExam() {
+  const data = ALL_EXAMS[currentExam];
+  const root = document.getElementById('examRoot');
+  let html = '';
+
+  // T/F
+  html += '<div class="section-header">Part I: True or False (Questions 1–10)</div>';
+  data.tf.forEach((item, idx) => {
+    html += `
+      <div class="q-card" id="card-tf-${idx}">
+        <div class="q-title">${idx + 1}. ${item.q}</div>
+        <label class="opt-label"><input type="radio" name="tf_${idx}" value="true" onchange="updateProgress()"> True</label>
+        <label class="opt-label"><input type="radio" name="tf_${idx}" value="false" onchange="updateProgress()"> False</label>
+        <div class="feedback" id="fb-tf-${idx}"></div>
+      </div>`;
+  });
+
+  // FIB
+  html += '<div class="section-header">Part II: Fill in the Blank Space (Questions 11–17)</div>';
+  data.fib.forEach((item, idx) => {
+    html += `
+      <div class="q-card" id="card-fib-${idx}">
+        <div class="q-title">${idx + 11}. ${item.q}</div>
+        <input type="text" class="fib-input" id="inp-fib-${idx}" placeholder="Type your answer here..." oninput="updateProgress()">
+        <div class="feedback" id="fb-fib-${idx}"></div>
+      </div>`;
+  });
+
+  // MCQ
+  html += '<div class="section-header">Part III: Multiple Choice Questions (Questions 18–50)</div>';
+  data.mcq.forEach((item, idx) => {
+    html += `<div class="q-card" id="card-mcq-${idx}"><div class="q-title">${idx + 18}. ${item.q}</div>`;
+    if (item.table) html += item.table;
+    item.opts.forEach((optText, oIdx) => {
+      const letter = ['A', 'B', 'C', 'D'][oIdx];
+      html += `<label class="opt-label"><input type="radio" name="mcq_${idx}" value="${letter}" onchange="updateProgress()"> <strong>${letter})</strong> ${optText}</label>`;
+    });
+    html += `<div class="feedback" id="fb-mcq-${idx}"></div></div>`;
+  });
+
+  root.innerHTML = html;
+  updateProgress();
+}
+
+function updateProgress() {
+  const data = ALL_EXAMS[currentExam];
+  let answered = 0;
+  data.tf.forEach((_, idx) => { if (document.querySelector(`input[name="tf_${idx}"]:checked`)) answered++; });
+  data.fib.forEach((_, idx) => { if (document.getElementById(`inp-fib-${idx}`).value.trim().length > 0) answered++; });
+  data.mcq.forEach((_, idx) => { if (document.querySelector(`input[name="mcq_${idx}"]:checked`)) answered++; });
+  document.getElementById('progressText').innerHTML = `Answered: ${answered} / 50 &nbsp;|&nbsp; Timer: <span id="timer">${document.getElementById('timer').textContent}</span>`;
+}
+
+function gradeExam() {
+  const data = ALL_EXAMS[currentExam];
+  let tfScore = 0, fibScore = 0, mcqScore = 0;
+
+  data.tf.forEach((item, idx) => {
+    const card = document.getElementById(`card-tf-${idx}`);
+    const fb = document.getElementById(`fb-tf-${idx}`);
+    const sel = document.querySelector(`input[name="tf_${idx}"]:checked`);
+    card.classList.remove('correct', 'wrong');
+    const correctStr = item.ans ? 'True' : 'False';
+    if (sel && (sel.value === String(item.ans))) {
+      tfScore++; card.classList.add('correct');
+      fb.innerHTML = `<strong>✔ Correct (${correctStr}):</strong> ${item.exp}`;
+    } else {
+      card.classList.add('wrong');
+      fb.innerHTML = `<strong>✘ Incorrect — Correct: ${correctStr}.</strong> ${item.exp}`;
+    }
+    fb.classList.add('show');
+  });
+
+  data.fib.forEach((item, idx) => {
+    const card = document.getElementById(`card-fib-${idx}`);
+    const fb = document.getElementById(`fb-fib-${idx}`);
+    const rawVal = document.getElementById(`inp-fib-${idx}`).value.trim().toLowerCase().replace(/\s+/g, ' ');
+    card.classList.remove('correct', 'wrong');
+    const isMatch = item.ans.some(a => rawVal === a || (a.length > 4 && rawVal.includes(a)));
+    if (rawVal.length > 0 && isMatch) {
+      fibScore++; card.classList.add('correct');
+      fb.innerHTML = `<strong>✔ Correct (${item.display_ans}):</strong> ${item.exp}`;
+    } else {
+      card.classList.add('wrong');
+      fb.innerHTML = `<strong>✘ Incorrect — Correct: ${item.display_ans}.</strong> ${item.exp}`;
+    }
+    fb.classList.add('show');
+  });
+
+  data.mcq.forEach((item, idx) => {
+    const card = document.getElementById(`card-mcq-${idx}`);
+    const fb = document.getElementById(`fb-mcq-${idx}`);
+    const sel = document.querySelector(`input[name="mcq_${idx}"]:checked`);
+    card.classList.remove('correct', 'wrong');
+    if (sel && sel.value === item.ans) {
+      mcqScore++; card.classList.add('correct');
+      fb.innerHTML = `<strong>✔ Correct (${item.ans}):</strong> ${item.exp}`;
+    } else {
+      card.classList.add('wrong');
+      fb.innerHTML = `<strong>✘ Incorrect — Correct: ${item.ans}.</strong> ${item.exp}`;
+    }
+    fb.classList.add('show');
+  });
+
+  const total = tfScore + fibScore + mcqScore;
+  const pct = Math.round((total / 50) * 100);
+  document.getElementById('totalScoreText').textContent = `Total Score: ${total} / 50 (${pct}%)`;
+  document.getElementById('breakdownText').innerHTML = `
+    <span>True/False: ${tfScore} / 10</span>
+    <span>Fill-in-Blank: ${fibScore} / 7</span>
+    <span>Multiple Choice: ${mcqScore} / 33</span>
+  `;
+  document.getElementById('scoreBanner').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetExam() {
+  renderExam();
+  startTimer();
+  document.getElementById('scoreBanner').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Initialize
+renderExam();
+startTimer();
+</script>
+</body>
+  </html>
